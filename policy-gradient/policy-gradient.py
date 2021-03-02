@@ -44,6 +44,13 @@ class PolicyGradient:
         log_prob = self.get_policy(obs).log_prob(action)
         return -(log_prob * weight).mean()
 
+    def reward_to_go(self, rews):
+        n = len(rews)
+        rtg = torch.zeros(n)
+        for i in range(n-1, -1, -1):
+            rtg[i] = rews[i] + (rtg[i+1] if i+1 < n else 0)
+        return rtg
+
     def learn(self, env):
         batch_obs       = []
         batch_acts      = []
@@ -77,7 +84,8 @@ class PolicyGradient:
                     # env.close()
                 rendered = True
 
-                batch_weights += [episode_return] * episode_length # duplicate return length times
+                # batch_weights += [episode_return] * episode_length # duplicate return length times
+                batch_weights += list(self.reward_to_go(episode_rewards))
                 obs, done, episode_rewards = env.reset(), False, []
 
                 if len(batch_obs) > self.batch_size:
@@ -95,42 +103,19 @@ class PolicyGradient:
 
 def main(env_id: str = 'CartPole-v0', hidden_sizes=[32], lr=1e-2,
         epochs=100, batch_size=4096, render=True, 
-        repeat_test: int = 1, device=torch.device('cpu')):
+        repeat_test: int = 3, device=torch.device('cpu')):
 
     env = gym.make(env_id)
     obs_dim = env.observation_space.shape[0]
     nb_actions = env.action_space.n
-    plotter = VisdomLinePlotter()
-
-    configs = [
-        {'name': 'lr1e-2', 'lr': 1e-2},
-        {'name': 'lr1e-3', 'lr': 1e-3},
-        {'name': 'lr1e-4', 'lr': 1e-4},
-    ]
-
-    for cfg in configs:
-        for i in range(repeat_test):
-            agent = PolicyGradient(obs_dim, nb_actions, hidden_sizes, lr=cfg['lr'], batch_size=batch_size, render=render, device=device)
-            for eid in range(epochs):
-                returns, _ = agent.learn(env)
-                print(f"> epoch: {eid+1}/{epochs}, \t mean_return: {sum(returns) / len(returns)}, \t max_return: {max(returns)}")
-                plotter.plot('avg return', cfg['name']+':'+str(i), "Average Return (lr)", eid+1, sum(returns) / len(returns))
 
     plotter = VisdomLinePlotter()
-    configs = [
-        {'name': 'h32', 'hidden_sizes': [32]},
-        {'name': 'h64', 'hidden_sizes': [64]},
-        {'name': 'h32-32', 'hidden_sizes': [32,32]},
-        {'name': 'h64-64', 'hidden_sizes': [64,64]},
-    ]
-
-    for cfg in configs:
-        for i in range(repeat_test):
-            agent = PolicyGradient(obs_dim, nb_actions, cfg['hidden_sizes'], lr=lr, batch_size=batch_size, render=render, device=device)
-            for eid in range(epochs):
-                returns, _ = agent.learn(env)
-                print(f"> epoch: {eid+1}/{epochs}, \t mean_return: {sum(returns) / len(returns)}, \t max_return: {max(returns)}")
-                plotter.plot('avg return', cfg['name']+':'+str(i), "Average Return (hidden)", eid+1, sum(returns) / len(returns))
+    agent = PolicyGradient(obs_dim, nb_actions, hidden_sizes, lr=lr, batch_size=batch_size, render=render, device=device)
+    for eid in range(epochs):
+        returns, _ = agent.learn(env)
+        print(f"> epoch: {eid+1}/{epochs}, \t mean_return: {sum(returns) / len(returns)}, \t max_return: {max(returns)}")
+        plotter.plot('return', 'mean return', "Return (lr)", eid+1, sum(returns) / len(returns))
+        plotter.plot('return', 'max return', "Return (lr)", eid+1, max(returns))
 
 if __name__ == '__main__':
     import argparse
@@ -138,8 +123,10 @@ if __name__ == '__main__':
     parser.add_argument('--env_name', '--env', type=str, default='CartPole-v0')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--cpu', action='store_true')
+    parser.add_argument('--lr', type=float, default=1e-2)
+    parser.add_argument('--epochs', type=int, default=100)
     args = parser.parse_args()
 
     device = torch.device('cpu') if args.cpu else torch.device('cuda')
 
-    main(env_id=args.env_name, render=args.render, device=device)
+    main(env_id=args.env_name, render=args.render, device=device, lr=args.lr, hidden_sizes=[64,64], epochs=args.epochs)
