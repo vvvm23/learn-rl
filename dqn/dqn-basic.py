@@ -1,5 +1,6 @@
 import torch
 import gym
+import numpy as np
 from tqdm import tqdm
 
 import argparse
@@ -93,10 +94,9 @@ if __name__ == '__main__':
         state = memory.get_stacked_obs(idx)
 
         action = agent.act_epsilon_greedy(state, eps_schedule.get(i))
-        # TODO: Do we clip reward?
         next_obs, reward, done, _ = env.step(action)
         episode_reward += reward
-        memory.store_effect(idx, action, reward, done)
+        memory.store_effect(idx, action, np.sign(reward), done)
 
         if done:
             next_obs = env.reset()
