@@ -73,25 +73,11 @@ if __name__ == '__main__':
     root_dir.mkdir(exist_ok=True)
     chk_dir.mkdir(exist_ok=True)
 
-    # TODO: Merge these two loops? maybe..
-    # initial population of buffer
-    obs = env.reset()
-    for i in range(params.memory_initial):
-        obs = obs.squeeze(0) # TODO: Check wrappers so we don't have to do this
-        idx = memory.store_obs(obs)
-        state = memory.get_stacked_obs(idx)
-        action = agent.act_epsilon_greedy(state, 1.0)
-        next_obs, reward, done, _ = env.step(action)
-        memory.store_effect(idx, action, reward, done)
-
-        if done:
-            next_obs = env.reset()
-        obs = next_obs
-
     episode_reward = 0.0
     episode_count = 0
 
-    pb = tqdm(range(params.max_steps))
+    obs = env.reset()
+    pb = tqdm(range(-params.memory_initial, params.max_steps))
     plotter = VisdomLinePlotter()
     reward_history = deque(maxlen=3)
     for i in pb:
@@ -121,6 +107,8 @@ if __name__ == '__main__':
                 agent.save(chk_dir/ f"checkpoint-episode-{episode_count}.pt")
 
         obs = next_obs
+
+        if i < 0: continue
 
         if i % params.target_sync == 0:
             agent.sync_target()
