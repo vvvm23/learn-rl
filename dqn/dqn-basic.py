@@ -28,11 +28,11 @@ if __name__ == '__main__':
     device = torch.device('cpu') if args.cpu else torch.device('cuda')
     
     env = make_env(params.env_name)
-    obs_shape = env.observation_space.shape
+    obs_shape = env.observation_space.shape[1:]
     nb_actions = env.action_space.n
 
     if params.net_type == 'conv':
-        net = DQN(obs_shape, nb_actions)
+        net = DQN((params.frame_stack, *obs_shape), nb_actions)
     elif params.net_type == 'linear':
         net = DQNLinear(obs_shape, nb_actions)
     agent = DQNAgent(
@@ -45,18 +45,22 @@ if __name__ == '__main__':
     if not args.evaluate == None:
         agent.net.load_state_dict(torch.load(args.evaluate))
         obs = env.reset()
+        state = torch.zeros(params.frame_stack, *obs_shape)
+
         done = False
         total_return = 0.
         while not done:
+            state = torch.cat([state[1:], torch.from_numpy(obs)], dim=0)
             if args.render:
                 env.render()
-            action = agent.act_greedy(torch.from_numpy(obs))
+            action = agent.act_greedy(state)
             obs, reward, done, _ = env.step(action)
             total_return += reward
             sleep(1 / 60.)
+        print(f"episode score: {total_return}")
         exit()
 
-    memory = ExperienceBuffer(params.memory_capacity, obs_shape[1:], obs_shape[0])
+    memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack)
 
     opt = torch.optim.Adam(net.parameters(), lr=params.learning_rate)
     eps_schedule = EpisilonAnnealer(params.epsilon_start, params.epsilon_end, params.epsilon_frames)
@@ -84,7 +88,7 @@ if __name__ == '__main__':
         if args.render:
             env.render()
 
-        obs = obs.squeeze(0)
+        obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
         idx = memory.store_obs(obs)
         state = memory.get_stacked_obs(idx)
 
