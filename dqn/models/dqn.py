@@ -24,7 +24,19 @@ class DQN(nn.Module):
         )
 
     def forward(self, x):
-        return self.q_head(self.conv(x / 255.).view(x.shape[0], -1))
+        return self.q_head(self.conv(x).view(x.shape[0], -1))
+
+class DQNLinear(nn.Module):
+    def __init__(self, in_dim: int, nb_actions: int):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(*in_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, nb_actions),
+        )
+
+    def forward(self, x):
+        return self.fc(x)
 
 if __name__ == '__main__':
     net = DQN((4, 84, 84), 4)
