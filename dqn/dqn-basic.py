@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # Create the run directories
     runs_dir = Path(f"runs")
-    root_dir = runs_dir / f'run-{save_id}'
+    root_dir = runs_dir / f'{args.task}-{save_id}'
     chk_dir = root_dir / 'checkpoints'
 
     runs_dir.mkdir(exist_ok=True) 
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     obs = env.reset()
     pb = tqdm(range(-params.memory_initial, params.max_steps))
     plotter = VisdomLinePlotter()
-    reward_history = deque(maxlen=3)
+    reward_history = deque(maxlen=25)
     for i in pb:
         if args.render:
             env.render()
