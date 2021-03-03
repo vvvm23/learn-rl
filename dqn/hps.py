@@ -17,6 +17,7 @@ HPS_BASIC = {
         'batch_size':           32,
         'net_type':             'conv',
         'save_frequency':       100,
+        'frame_stack':          4,
     }),
 
     'breakout': SimpleNamespace(**{
@@ -35,6 +36,26 @@ HPS_BASIC = {
         'batch_size':           32,
         'net_type':             'conv',
         'save_frequency':       100,
+        'frame_stack':          4,
+    }),
+
+    'invaders': SimpleNamespace(**{
+        'env_name':             "SpaceInvadersNoFrameskip-v4",
+        'stop_reward':          500.0,
+        'max_steps':            5_000_000,
+        'memory_capacity':      1_000_000,
+        'memory_initial':       50_000,
+        'target_sync':          10_000,
+        'train_frequency':      1,
+        'epsilon_start':        1.0,
+        'epsilon_end':          0.1,
+        'epsilon_frames':       1_000_000,
+        'learning_rate':        2.5e-4,
+        'gamma':                0.99,
+        'batch_size':           32,
+        'net_type':             'conv',
+        'save_frequency':       100,
+        'frame_stack':          4,
     }),
 
     'cartpole': SimpleNamespace(**{
