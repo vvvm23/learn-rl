@@ -18,7 +18,7 @@ class ExperienceBuffer:
         self.next_idx = 0
         self.nb_samples = 0
 
-        self.observations   = torch.empty(self.capacity, *(obs_shape), dtype=torch.uint8)
+        self.observations   = torch.empty(self.capacity, *(obs_shape), dtype=torch.float) # uint8
         self.actions        = torch.empty(self.capacity, dtype=torch.uint8)
         self.rewards        = torch.empty(self.capacity, dtype=torch.float)
         self.dones          = torch.empty(self.capacity, dtype=torch.bool)

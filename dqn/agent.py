@@ -29,6 +29,7 @@ class DQNAgent:
     def sync_target(self):
         self.target_net.load_state_dict(self.net.state_dict())
 
+    @torch.no_grad()
     def act_greedy(self, obs):
         return self.net(obs.to(self.device).unsqueeze(0)).squeeze().argmax().item()
 

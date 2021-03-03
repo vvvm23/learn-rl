@@ -36,5 +36,18 @@ if __name__ == '__main__':
     memory = ExperienceBuffer(params.memory_capacity, obs_shape[1:], obs_shape[0])
 
     opt = torch.optim.Adam(net.parameters(), lr=params.learning_rate)
-
     eps_schedule = EpisilonAnnealer(params.epsilon_start, params.epsilon_end, params.epsilon_frames)
+
+    # initial population of buffer
+    obs = env.reset()
+    for i in range(params.memory_initial):
+        obs = obs.squeeze(0)
+        idx = memory.store_obs(obs)
+        state = memory.get_stacked_obs(idx)
+        action = agent.act_epsilon_greedy(state, 1.0)
+        next_obs, reward, done, _ = env.step(action)
+        memory.store_effect(idx, action, reward, done)
+
+        if done:
+            next_obs = env.reset()
+        obs = next_obs
