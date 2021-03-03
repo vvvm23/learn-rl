@@ -6,6 +6,7 @@ import argparse
 import datetime
 from pathlib import Path
 from collections import deque
+from time import sleep
 
 from agent import DQNAgent 
 from memory.memory import ExperienceBuffer
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--task', type=str, default='pong') 
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--cpu', action='store_true')
+    parser.add_argument('--evaluate', type=str, default=None)
     args = parser.parse_args()
     params = HPS[args.task]
 
@@ -39,6 +41,27 @@ if __name__ == '__main__':
         gamma=params.gamma,
         device=device
     )
+
+    if not args.evaluate == None:
+        agent.net.load_state_dict(torch.load(args.evaluate))
+        obs = env.reset()
+        done = False
+        total_return = 0.
+        # while not done:
+        while True:
+            if args.render:
+                env.render()
+            action = agent.act_greedy(torch.from_numpy(obs))
+            obs, reward, done, _ = env.step(action)
+            total_return += reward
+            # sleep(1 / 60.)
+            if done:
+                print(f"total reward: {total_return}")
+                obs = env.reset()
+                done = False
+                total_return = 0.
+        exit()
+
     memory = ExperienceBuffer(params.memory_capacity, obs_shape[1:], obs_shape[0])
 
     opt = torch.optim.Adam(net.parameters(), lr=params.learning_rate)

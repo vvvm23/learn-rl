@@ -19,6 +19,24 @@ HPS_BASIC = {
         'save_frequency':       100,
     }),
 
+    'breakout': SimpleNamespace(**{
+        'env_name':             "BreakoutNoFrameskip-v4",
+        'stop_reward':          500.0,
+        'max_steps':            5_000_000,
+        'memory_capacity':      1_000_000,
+        'memory_initial':       50_000,
+        'target_sync':          10_000,
+        'train_frequency':      1,
+        'epsilon_start':        1.0,
+        'epsilon_end':          0.1,
+        'epsilon_frames':       1_000_000,
+        'learning_rate':        2.5e-4,
+        'gamma':                0.99,
+        'batch_size':           32,
+        'net_type':             'conv',
+        'save_frequency':       100,
+    }),
+
     'cartpole': SimpleNamespace(**{
         'env_name':             "CartPole-v1",
         'stop_reward':          198.0,
