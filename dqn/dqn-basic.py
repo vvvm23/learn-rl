@@ -5,6 +5,7 @@ from tqdm import tqdm
 import argparse
 import datetime
 from pathlib import Path
+from collections import deque
 
 from agent import DQNAgent 
 from memory.memory import ExperienceBuffer
@@ -75,6 +76,7 @@ if __name__ == '__main__':
 
     pb = tqdm(range(params.max_steps))
     plotter = VisdomLinePlotter()
+    reward_history = deque(maxlen=3)
     for i in pb:
         if args.render:
             env.render()
@@ -92,8 +94,11 @@ if __name__ == '__main__':
         if done:
             next_obs = env.reset()
             episode_count += 1
+            reward_history.append(episode_reward)
+
             pb.set_description(f"episode: {episode_count}, reward: {episode_reward}, eps: {eps_schedule.get(i)*100:.2f}%")
-            plotter.plot('episode reward', 'foo', "Episode Return", episode_count, episode_reward)
+            plotter.plot('episode reward', 'episode return', "Episode Return", episode_count, episode_reward)
+            plotter.plot('episode reward', 'average return', "Episode Return", episode_count, sum(reward_history) / len(reward_history))
             episode_reward = 0
             if episode_count > 0 and episode_count % params.save_frequency == 0:
                 agent.save(chk_dir/ f"checkpoint-episode-{episode_count}.pt")
