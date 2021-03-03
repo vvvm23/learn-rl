@@ -47,19 +47,13 @@ if __name__ == '__main__':
         obs = env.reset()
         done = False
         total_return = 0.
-        # while not done:
-        while True:
+        while not done:
             if args.render:
                 env.render()
             action = agent.act_greedy(torch.from_numpy(obs))
             obs, reward, done, _ = env.step(action)
             total_return += reward
-            # sleep(1 / 60.)
-            if done:
-                print(f"total reward: {total_return}")
-                obs = env.reset()
-                done = False
-                total_return = 0.
+            sleep(1 / 60.)
         exit()
 
     memory = ExperienceBuffer(params.memory_capacity, obs_shape[1:], obs_shape[0])
