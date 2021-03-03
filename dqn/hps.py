@@ -8,6 +8,7 @@ HPS_BASIC = {
         'memory_capacity':      100_000,
         'memory_initial':       10_000,
         'target_sync':          1000,
+        'train_frequency':      1,
         'epsilon_start':        1.0,
         'epsilon_end':          0.01,
         'epsilon_frames':       100_000,

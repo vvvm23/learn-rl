@@ -19,7 +19,7 @@ class ExperienceBuffer:
         self.nb_samples = 0
 
         self.observations   = torch.empty(self.capacity, *(obs_shape), dtype=torch.float) # uint8
-        self.actions        = torch.empty(self.capacity, dtype=torch.uint8)
+        self.actions        = torch.empty(self.capacity, dtype=torch.int64)
         self.rewards        = torch.empty(self.capacity, dtype=torch.float)
         self.dones          = torch.empty(self.capacity, dtype=torch.bool)
 
@@ -70,7 +70,7 @@ class ExperienceBuffer:
         reward_batch = self.rewards[idx]
         done_batch = self.dones[idx]
 
-        return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch, idx
+        return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch
 
     def can_sample(self, batch_size: int):
         return self.nb_samples >= batch_size
@@ -107,16 +107,3 @@ if __name__ == '__main__':
     import tqdm
     import random
     memory = ExperienceBuffer(100_000, (4, 4), 4)
-
-    # for i in tqdm.tqdm(range(200_000)):
-        # idx = memory.store_obs(np.random.randn(4, 4))
-        # memory.store_effect(idx, 0, 0., random.choice([True, False]))
-
-        # if memory.can_sample(64):
-            # memory.sample(64)
-    for i in range(10):
-        idx = memory.store_obs(np.random.randn(4, 4))
-        memory.store_effect(idx, 0, 0., random.choice([True, False]))
-
-    print(memory.get_stacked_obs(0))
-    print(memory.dones[:10])
