@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from helper import get_conv_out
+from .helper import get_conv_out
 
 from typing import Tuple
 
