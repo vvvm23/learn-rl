@@ -31,7 +31,7 @@ class DQNAgent:
 
     @torch.no_grad()
     def act_greedy(self, obs):
-        return self.net(obs.to(self.device).unsqueeze(0)).squeeze().argmax().item()
+        return self.net(obs.to(self.device).unsqueeze(0) / 255.).squeeze().argmax().item()
 
     def act_epsilon_greedy(self, obs, epsilon: float):
         if random.random() < epsilon:
@@ -45,10 +45,10 @@ class DQNAgent:
             next_obs_batch,
             done_batch,
         ):
-        obs_batch       = obs_batch.to(self.device)
+        obs_batch       = obs_batch.to(self.device) / 255.
         action_batch    = action_batch.to(self.device)
         reward_batch    = reward_batch.to(self.device)
-        next_obs_batch  = next_obs_batch.to(self.device)
+        next_obs_batch  = next_obs_batch.to(self.device) / 255.
         done_batch      = done_batch.to(self.device)
 
         state_action_values = self.net(obs_batch).gather(1, action_batch.unsqueeze(-1)).squeeze(-1)

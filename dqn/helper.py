@@ -8,7 +8,7 @@ class EpisilonAnnealer:
         self.end_frame = end_frame
 
     def get(self, step):
-        if step < 0: return 1.0
+        if step < 0: return self.start_eps
         return max(self.end_eps, self.start_eps - step / self.end_frame)
 
 class VisdomLinePlotter(object):

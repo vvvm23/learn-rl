@@ -30,7 +30,7 @@ if __name__ == '__main__':
     device = torch.device('cpu') if args.cpu else torch.device('cuda')
     
     env = make_env(params.env_name)
-    obs_shape = env.observation_space.shape[1:]
+    obs_shape = env.observation_space.shape
     nb_actions = env.action_space.n
 
     if params.net_type == 'conv':
@@ -52,19 +52,19 @@ if __name__ == '__main__':
         done = False
         total_return = 0.
         while not done:
-            state = torch.cat([state[1:], torch.from_numpy(obs)], dim=0)
+            state = torch.cat([state[1:], torch.from_numpy(obs).unsqueeze(0)], dim=0)
             if args.render:
                 env.render()
-            action = agent.act_greedy(state)
+            action = agent.act_epsilon_greedy(state, 0.01)
             obs, reward, done, _ = env.step(action)
             total_return += reward
-            sleep(1 / 60.)
+            sleep(1 / 30.)
         print(f"episode score: {total_return}")
         exit()
 
     if args.resume:
         agent.load(args.resume[0])
-        memory = torch.load(args.resume[1])
+        # memory = torch.load(args.resume[1])
 
     memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack)
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         if args.render:
             env.render()
 
-        obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
+        # obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
         idx = memory.store_obs(obs)
         state = memory.get_stacked_obs(idx)
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
             episode_reward = 0
             if episode_count > 0 and episode_count % params.save_frequency == 0:
                 agent.save(chk_dir/ f"checkpoint-episode-{episode_count}.pt")
-                torch.save(memory, chk_dir / f"memory.pt")
+                # torch.save(memory, chk_dir / f"memory.pt")
 
         obs = next_obs
 
