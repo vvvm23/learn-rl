@@ -65,6 +65,10 @@ class DQNAgent:
     def save(self, path):
         torch.save(self.net.state_dict(), path)
 
+    def load(self, path):
+        self.net.load_state_dict(torch.load(path))
+        self.sync_target()
+
 if __name__ == '__main__':
     nb_actions = 4
     net = nn.Linear(8, nb_actions)

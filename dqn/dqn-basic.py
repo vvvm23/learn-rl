@@ -23,6 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--cpu', action='store_true')
     parser.add_argument('--evaluate', type=str, default=None)
+    parser.add_argument('--resume', type=str, default=None, nargs=2)
     args = parser.parse_args()
     params = HPS[args.task]
 
@@ -43,7 +44,7 @@ if __name__ == '__main__':
         device=device
     )
 
-    if not args.evaluate == None:
+    if args.evaluate:
         agent.net.load_state_dict(torch.load(args.evaluate))
         obs = env.reset()
         state = torch.zeros(params.frame_stack, *obs_shape)
@@ -60,6 +61,10 @@ if __name__ == '__main__':
             sleep(1 / 60.)
         print(f"episode score: {total_return}")
         exit()
+
+    if args.resume:
+        agent.load(args.resume[0])
+        memory = torch.load(args.resume[1])
 
     memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack)
 
@@ -109,6 +114,7 @@ if __name__ == '__main__':
             episode_reward = 0
             if episode_count > 0 and episode_count % params.save_frequency == 0:
                 agent.save(chk_dir/ f"checkpoint-episode-{episode_count}.pt")
+                torch.save(memory, chk_dir / f"memory.pt")
 
         obs = next_obs
 
