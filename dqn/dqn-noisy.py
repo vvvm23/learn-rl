@@ -11,9 +11,9 @@ from time import sleep
 
 from agent import DQNAgent 
 from memory.memory import ExperienceBuffer
-from models.dqn import DQN, DQNLinear
+from models.noisy import DQN
 from wrappers import make_env
-from helper import EpisilonAnnealer, VisdomLinePlotter
+from helper import VisdomLinePlotter
 
 from hps import HPS_BASIC as HPS
 
@@ -56,7 +56,7 @@ if __name__ == '__main__':
                 state = torch.cat([state[1:], torch.from_numpy(obs).unsqueeze(0)], dim=0)
                 if args.render:
                     env.render()
-                action = agent.act_epsilon_greedy(state, 0.02)
+                action = agent.act_greedy(state)
                 obs, reward, done, _ = env.step(action)
                 total_return += reward
                 sleep(1 / 60.)
@@ -70,7 +70,6 @@ if __name__ == '__main__':
     memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack)
 
     opt = torch.optim.Adam(net.parameters(), lr=params.learning_rate)
-    eps_schedule = EpisilonAnnealer(params.epsilon_start, params.epsilon_end, params.epsilon_frames)
 
     save_id = str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     path_str = lambda p: p.absolute().as_posix() # converts a pathlib Path to string
@@ -95,11 +94,10 @@ if __name__ == '__main__':
         if args.render:
             env.render()
 
-        # obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
         idx = memory.store_obs(obs)
         state = memory.get_stacked_obs(idx)
 
-        action = agent.act_epsilon_greedy(state, eps_schedule.get(i))
+        action = agent.act_greedy(state)
         next_obs, reward, done, _ = env.step(action)
         episode_reward += reward
         memory.store_effect(idx, action, np.sign(reward), done)
@@ -109,7 +107,7 @@ if __name__ == '__main__':
             episode_count += 1
             reward_history.append(episode_reward)
 
-            pb.set_description(f"episode: {episode_count}, reward: {episode_reward}, eps: {eps_schedule.get(i)*100:.2f}%")
+            pb.set_description(f"episode: {episode_count}, reward: {episode_reward}")
             plotter.plot('episode reward', 'episode return', "Episode Return", episode_count, episode_reward)
             plotter.plot('episode reward', 'average return', "Episode Return", episode_count, sum(reward_history) / len(reward_history))
             episode_reward = 0

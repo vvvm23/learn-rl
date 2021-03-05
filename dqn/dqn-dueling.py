@@ -11,7 +11,7 @@ from time import sleep
 
 from agent import DQNAgent 
 from memory.memory import ExperienceBuffer
-from models.noisy import DQN
+from models.dueling import DQN
 from wrappers import make_env
 from helper import EpisilonAnnealer, VisdomLinePlotter
 
