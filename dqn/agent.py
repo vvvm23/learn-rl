@@ -44,6 +44,7 @@ class DQNAgent:
             reward_batch,
             next_obs_batch,
             done_batch,
+            double=False,
         ):
         obs_batch       = obs_batch.to(self.device) / 255.
         action_batch    = action_batch.to(self.device)
@@ -53,12 +54,15 @@ class DQNAgent:
 
         state_action_values = self.net(obs_batch).gather(1, action_batch.unsqueeze(-1)).squeeze(-1)
         with torch.no_grad():
-            next_state_values = self.target_net(next_obs_batch).max(1)[0]
+            if double:
+                next_state_actions = self.net(next_obs_batch).argmax(-1).unsqueeze(-1)
+                next_state_values = self.target_net(next_obs_batch).gather(1, next_state_actions).squeeze(-1)
+            else:
+                next_state_values = self.target_net(next_obs_batch).max(-1)[0]
             next_state_values[done_batch] = 0.0
             next_state_values = next_state_values.detach() # is this detach needed if we are in no_grad?
         expected_state_action_values = next_state_values * self.gamma + reward_batch
 
-        # loss = state_action_values.sub(expected_state_action_values).mean().pow(2)
         loss = F.mse_loss(state_action_values, expected_state_action_values)
         return loss
 
