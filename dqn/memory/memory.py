@@ -10,9 +10,17 @@ from typing import Tuple
     `obs_shape` has type Tuple[int, int] as `frame_stack` dictates the number of channels.
 """
 class ExperienceBuffer:
-    def __init__(self, capacity: int, obs_shape: Tuple[int, int], frame_stack: int = 4):
+    def __init__(self, 
+            capacity: int, 
+            obs_shape: Tuple[int, int], 
+            frame_stack: int = 4,
+            unroll_steps: int = 1,
+            gamma: float = 0.99
+        ):
         self.obs_shape = obs_shape
         self.frame_stack = frame_stack
+        self.unroll_steps = unroll_steps
+        self.gamma = gamma
         self.capacity = capacity
 
         self.next_idx = 0
@@ -31,7 +39,7 @@ class ExperienceBuffer:
 
     def get_stacked_obs(self, idx: int):
         idx %= self.capacity
-        start_idx = (idx - self.frame_stack)
+        start_idx = idx - self.frame_stack
 
         stacked_obs = torch.zeros(self.frame_stack, *self.obs_shape)
         stacked_obs[-1] = self.observations[idx]
@@ -62,13 +70,26 @@ class ExperienceBuffer:
 
         self.pending_effect = False
 
+    def get_unrolled_reward(self, idx: int):
+        idx %= self.capacity
+        start_idx = idx - self.unroll_steps
+        total_reward = torch.tensor(0.0)
+        for i in range(idx, start_idx, -1):
+            total_reward *= self.gamma
+            total_reward += self.rewards[i]
+            if self.dones[i] or (i % self.capacity) >= self.nb_samples:
+                break
+        return total_reward
+
     def sample(self, batch_size: int):
         idx = np.random.choice(self.nb_samples, batch_size, replace=False)
 
         obs_batch = torch.cat([self.get_stacked_obs(i).unsqueeze(0) for i in idx], dim=0)
-        next_obs_batch = torch.cat([self.get_stacked_obs(i+1).unsqueeze(0) for i in idx], dim=0)
+        next_obs_batch = torch.cat([self.get_stacked_obs(i+self.unroll_steps).unsqueeze(0) for i in idx], dim=0)
         action_batch = self.actions[idx]
-        reward_batch = self.rewards[idx]
+        # reward_batch = self.rewards[idx]
+        reward_batch = torch.cat([self.get_unrolled_reward(i+1).unsqueeze(0) for i in idx], dim=0)
+        
         done_batch = self.dones[idx]
 
         return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch
@@ -107,4 +128,11 @@ if __name__ == '__main__':
     import sys
     import tqdm
     import random
-    memory = ExperienceBuffer(100_000, (4, 4), 4)
+    memory = ExperienceBuffer(100_000, (4, 4), 4, unroll_steps=4)
+
+    for _ in range(100):
+        idx = memory.store_obs(np.random.randn(4, 4))
+        memory.store_effect(idx, 0, 1.0, done=random.sample([True, False], 1)[0])
+
+    batch = memory.sample(1)
+    print(batch[2], batch[-1])
