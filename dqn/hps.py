@@ -18,6 +18,7 @@ HPS_BASIC = {
         'net_type':             'conv',
         'save_frequency':       100,
         'frame_stack':          4,
+        'unroll_steps':         2,
     }),
 
     'breakout': SimpleNamespace(**{
@@ -37,6 +38,7 @@ HPS_BASIC = {
         'net_type':             'conv',
         'save_frequency':       100,
         'frame_stack':          4,
+        'unroll_steps':         4,
     }),
 
     'invaders': SimpleNamespace(**{
@@ -56,6 +58,7 @@ HPS_BASIC = {
         'net_type':             'conv',
         'save_frequency':       100,
         'frame_stack':          4,
+        'unroll_steps':         4,
     }),
 
     'cartpole': SimpleNamespace(**{

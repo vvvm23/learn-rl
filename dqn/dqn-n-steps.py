@@ -65,9 +65,8 @@ if __name__ == '__main__':
 
     if args.resume:
         agent.load(args.resume[0])
-        # memory = torch.load(args.resume[1])
 
-    memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack, unroll_steps=4)
+    memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack, unroll_steps=params.unroll_steps)
 
     opt = torch.optim.Adam(net.parameters(), lr=params.learning_rate)
     eps_schedule = EpisilonAnnealer(params.epsilon_start, params.epsilon_end, params.epsilon_frames)
@@ -95,7 +94,6 @@ if __name__ == '__main__':
         if args.render:
             env.render()
 
-        # obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
         idx = memory.store_obs(obs)
         state = memory.get_stacked_obs(idx)
 
@@ -115,7 +113,6 @@ if __name__ == '__main__':
             episode_reward = 0
             if episode_count > 0 and episode_count % params.save_frequency == 0:
                 agent.save(chk_dir/ f"checkpoint-episode-{episode_count}.pt")
-                # torch.save(memory, chk_dir / f"memory.pt")
 
         obs = next_obs
 

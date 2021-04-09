@@ -8,7 +8,8 @@ import random
 class DQNAgent:
     def __init__(self, 
             net: torch.nn.Module,
-            nb_actions: int, gamma: float,
+            nb_actions: int, 
+            gamma: float = 0.99, unroll_steps: int = 1,
             device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         ):
 
@@ -23,6 +24,7 @@ class DQNAgent:
 
         self.nb_actions = nb_actions
         self.gamma = gamma
+        self.unroll_steps = unroll_steps
 
         self.device = device
 
@@ -61,7 +63,7 @@ class DQNAgent:
                 next_state_values = self.target_net(next_obs_batch).max(-1)[0]
             next_state_values[done_batch] = 0.0
             next_state_values = next_state_values.detach() # is this detach needed if we are in no_grad?
-        expected_state_action_values = next_state_values * self.gamma + reward_batch
+        expected_state_action_values = next_state_values * (self.gamma ** self.unroll_steps) + reward_batch
 
         loss = F.mse_loss(state_action_values, expected_state_action_values)
         return loss
