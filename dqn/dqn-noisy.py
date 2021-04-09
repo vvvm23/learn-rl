@@ -17,7 +17,7 @@ from helper import VisdomLinePlotter
 
 from hps import HPS_BASIC as HPS
 
-@torch.no_grad
+@torch.no_grad()
 def evaluate(agent, env, render=False):
     while True:
         obs = env.reset()
