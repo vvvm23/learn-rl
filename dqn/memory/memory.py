@@ -72,14 +72,27 @@ class ExperienceBuffer:
 
     def get_unrolled_reward(self, idx: int):
         idx %= self.capacity
-        start_idx = idx - self.unroll_steps
-        total_reward = torch.tensor(0.0)
-        for i in range(idx, start_idx, -1):
-            total_reward *= self.gamma
-            total_reward += self.rewards[i]
-            if self.dones[i] or (i % self.capacity) >= self.nb_samples:
+        rewards = []
+        for t in range(self.unroll_steps):
+            t = (idx + t) % self.capacity
+            rewards.append(self.rewards[t])
+            if self.dones[t] or (t+1) % self.capacity >= self.nb_samples:
                 break
+        total_reward = torch.tensor(0.0)
+        for r in rewards:
+            total_reward *= self.gamma
+            total_reward += r
         return total_reward
+            
+        # idx %= self.capacity
+        # start_idx = idx - self.unroll_steps
+        # total_reward = torch.tensor(0.0)
+        # for i in range(idx, start_idx, -1):
+            # total_reward *= self.gamma
+            # total_reward += self.rewards[i]
+            # if self.dones[i] or (i % self.capacity) >= self.nb_samples:
+                # break
+        # return total_reward
 
     def sample(self, batch_size: int):
         idx = np.random.choice(self.nb_samples, batch_size, replace=False)
@@ -87,8 +100,7 @@ class ExperienceBuffer:
         obs_batch = torch.cat([self.get_stacked_obs(i).unsqueeze(0) for i in idx], dim=0)
         next_obs_batch = torch.cat([self.get_stacked_obs(i+self.unroll_steps).unsqueeze(0) for i in idx], dim=0)
         action_batch = self.actions[idx]
-        # reward_batch = self.rewards[idx]
-        reward_batch = torch.cat([self.get_unrolled_reward(i+1).unsqueeze(0) for i in idx], dim=0)
+        reward_batch = torch.cat([self.get_unrolled_reward(i).unsqueeze(0) for i in idx], dim=0)
         
         done_batch = self.dones[idx]
 

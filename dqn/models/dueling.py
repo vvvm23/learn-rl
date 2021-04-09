@@ -31,7 +31,6 @@ class DQN(nn.Module):
         )
 
     def forward(self, x):
-        # return self.q_head(self.conv(x).view(x.shape[0], -1))
         z = self.conv(x).view(x.shape[0], -1)
         v = self.v_head(z)
         adv = self.adv_head(z)
