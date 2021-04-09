@@ -17,6 +17,23 @@ from helper import EpisilonAnnealer, VisdomLinePlotter
 
 from hps import HPS_BASIC as HPS
 
+@torch.no_grad
+def evaluate(agent, env, render=False):
+    while True:
+        obs = env.reset()
+        state = torch.zeros(params.frame_stack, *obs_shape)
+        done = False
+        total_return = 0.
+        while not done:
+            if render:
+                env.render()
+                sleep(1 / 60.)
+            state = torch.cat([state[1:], torch.from_numpy(obs).unsqueeze(0)], dim=0)
+            action = agent.act_epsilon_greedy(state, 0.02)
+            obs, reward, done, _ = env.step(action)
+            total_return += reward
+        print(f"episode score: {total_return}")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, default='pong') 
@@ -46,21 +63,7 @@ if __name__ == '__main__':
 
     if args.evaluate:
         agent.net.load_state_dict(torch.load(args.evaluate))
-
-        while True:
-            obs = env.reset()
-            state = torch.zeros(params.frame_stack, *obs_shape)
-            done = False
-            total_return = 0.
-            while not done:
-                state = torch.cat([state[1:], torch.from_numpy(obs).unsqueeze(0)], dim=0)
-                if args.render:
-                    env.render()
-                action = agent.act_epsilon_greedy(state, 0.02)
-                obs, reward, done, _ = env.step(action)
-                total_return += reward
-                sleep(1 / 60.)
-            print(f"episode score: {total_return}")
+        evaluate(agent, env, render=args.render)
         exit()
 
     if args.resume:
