@@ -45,6 +45,7 @@ class ExperienceBuffer:
         self.pending_effect = False
 
     def update_beta(self, t):
+        assert self.prioritized, "prioritized replay is not enabled!"
         if t < 0: return self.beta
         self.beta = min(self.beta_end, self.beta_start + t * (1.0 - self.beta_start) / self.beta_steps)
         return self.beta
@@ -134,8 +135,8 @@ class ExperienceBuffer:
         else:
             return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch, idx
 
-    # TODO: Detach from gradient graph?
     def update_priorities(self, idx, prio):
+        assert self.prioritized, "prioritized replay is not enabled!"
         self.priorities[idx] = (prio + 1e-5).detach().cpu()
 
     def can_sample(self, batch_size: int):

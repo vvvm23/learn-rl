@@ -68,7 +68,6 @@ if __name__ == '__main__':
 
     if args.resume:
         agent.load(args.resume[0])
-        # memory = torch.load(args.resume[1])
 
     memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack,
                               prioritized=True,

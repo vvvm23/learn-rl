@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
         if i % params.train_frequency == 0:
             opt.zero_grad()
-            *batch, idx = memory.sample(params.batch_size)
+            *batch, _ = memory.sample(params.batch_size)
             loss = agent.calculate_loss(*batch)
             loss.mean().backward()
             opt.step()
