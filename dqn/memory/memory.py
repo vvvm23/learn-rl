@@ -44,7 +44,8 @@ class ExperienceBuffer:
 
         self.pending_effect = False
 
-    def _update_beta(self, t):
+    def update_beta(self, t):
+        if t < 0: return self.beta
         self.beta = min(self.beta_end, self.beta_start + t * (1.0 - self.beta_start) / self.beta_steps)
         return self.beta
 
@@ -82,7 +83,7 @@ class ExperienceBuffer:
         self.rewards[idx] = reward
         self.dones[idx] = done
         if self.prioritized:
-            self.priorities[idx] = self.priorities.max() if self.nb_samples else 1.0
+            self.priorities[idx] = self.priorities[:self.nb_samples-1].max() if self.nb_samples - 1 > 0 else 1.0
 
         self.pending_effect = False
 
@@ -113,9 +114,9 @@ class ExperienceBuffer:
     def sample(self, batch_size: int):
         if self.prioritized:
             p = self.priorities[:self.nb_samples]
-            p **= self.alpha
+            p = p ** self.alpha
             p /= p.sum()
-            idx = np.random.choice(self.nb_samples, batch_size, p=p)
+            idx = np.random.choice(self.nb_samples, batch_size, p=p.numpy())
             w = (self.nb_samples * p[idx]) ** (-self.beta)
             w /= w.max()
         else:
@@ -135,7 +136,7 @@ class ExperienceBuffer:
 
     # TODO: Detach from gradient graph?
     def update_priorities(self, idx, prio):
-        self.priorities[idx] = prio
+        self.priorities[idx] = (prio + 1e-5).detach().cpu()
 
     def can_sample(self, batch_size: int):
         return self.nb_samples >= batch_size

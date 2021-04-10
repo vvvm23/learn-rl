@@ -65,7 +65,8 @@ class DQNAgent:
             next_state_values = next_state_values.detach() # is this detach needed if we are in no_grad?
         expected_state_action_values = next_state_values * (self.gamma ** self.unroll_steps) + reward_batch
 
-        loss = F.mse_loss(state_action_values, expected_state_action_values)
+        # loss = F.mse_loss(state_action_values, expected_state_action_values)
+        loss = (state_action_values - expected_state_action_values).pow(2)
         return loss
 
     def save(self, path):

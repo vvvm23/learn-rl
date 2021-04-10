@@ -68,8 +68,11 @@ if __name__ == '__main__':
 
     if args.resume:
         agent.load(args.resume[0])
+        # memory = torch.load(args.resume[1])
 
-    memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack, unroll_steps=params.unroll_steps)
+    memory = ExperienceBuffer(params.memory_capacity, obs_shape, params.frame_stack,
+                              prioritized=True,
+                              beta_start=params.beta_start, beta_end=params.beta_end, beta_steps=params.beta_frames)
 
     opt = torch.optim.Adam(net.parameters(), lr=params.learning_rate)
     eps_schedule = EpisilonAnnealer(params.epsilon_start, params.epsilon_end, params.epsilon_frames)
@@ -97,6 +100,7 @@ if __name__ == '__main__':
         if args.render:
             env.render()
 
+        # obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
         idx = memory.store_obs(obs)
         state = memory.get_stacked_obs(idx)
 
@@ -126,9 +130,12 @@ if __name__ == '__main__':
 
         if i % params.train_frequency == 0:
             opt.zero_grad()
-            *batch, idx = memory.sample(params.batch_size)
+            *batch, idx, weights = memory.sample(params.batch_size)
             loss = agent.calculate_loss(*batch)
+            loss = loss * weights.to(device)
             loss.mean().backward()
             opt.step()
+            memory.update_priorities(idx, loss)
 
+        memory.update_beta(i)
         pb.update(1)
