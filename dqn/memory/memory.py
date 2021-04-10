@@ -12,16 +12,21 @@ from typing import Tuple
 class ExperienceBuffer:
     def __init__(self, 
             capacity: int, 
-            obs_shape: Tuple[int, int], 
-            frame_stack: int = 4,
-            unroll_steps: int = 1,
-            gamma: float = 0.99
+            obs_shape: Tuple[int, int], frame_stack: int = 4,
+            unroll_steps: int = 1, gamma: float = 0.99,
+            prioritized: bool = False, alpha: float = 0.6,
+            beta_start: float = 0.6, beta_end: float = 1.0, beta_steps: int = 100_000,
         ):
+        self.capacity = capacity
+
         self.obs_shape = obs_shape
         self.frame_stack = frame_stack
+
         self.unroll_steps = unroll_steps
         self.gamma = gamma
-        self.capacity = capacity
+
+        self.prioritized = prioritized
+        self.alpha = alpha
 
         self.next_idx = 0
         self.nb_samples = 0
@@ -30,9 +35,18 @@ class ExperienceBuffer:
         self.actions        = torch.empty(self.capacity, dtype=torch.int64)
         self.rewards        = torch.empty(self.capacity, dtype=torch.float)
         self.dones          = torch.empty(self.capacity, dtype=torch.bool)
+        if self.prioritized:
+            self.priorities = torch.empty(self.capacity, dtype=torch.float)
+            self.alpha = alpha
 
+            self.beta_start, self.beta_steps, self.beta_end = beta_start, beta_steps, beta_end
+            self.beta = self.beta_start
 
         self.pending_effect = False
+
+    def _update_beta(self, t):
+        self.beta = min(self.beta_end, self.beta_start + t * (1.0 - self.beta_start) / self.beta_steps)
+        return self.beta
 
     def __len__(self):
         return self.nb_samples
@@ -67,6 +81,8 @@ class ExperienceBuffer:
         self.actions[idx] = action
         self.rewards[idx] = reward
         self.dones[idx] = done
+        if self.prioritized:
+            self.priorities[idx] = self.priorities.max() if self.nb_samples else 1.0
 
         self.pending_effect = False
 
@@ -95,7 +111,15 @@ class ExperienceBuffer:
         # return total_reward
 
     def sample(self, batch_size: int):
-        idx = np.random.choice(self.nb_samples, batch_size, replace=False)
+        if self.prioritized:
+            p = self.priorities[:self.nb_samples]
+            p **= self.alpha
+            p /= p.sum()
+            idx = np.random.choice(self.nb_samples, batch_size, p=p)
+            w = (self.nb_samples * p[idx]) ** (-self.beta)
+            w /= w.max()
+        else:
+            idx = np.random.choice(self.nb_samples, batch_size, replace=False)
 
         obs_batch = torch.cat([self.get_stacked_obs(i).unsqueeze(0) for i in idx], dim=0)
         next_obs_batch = torch.cat([self.get_stacked_obs(i+self.unroll_steps).unsqueeze(0) for i in idx], dim=0)
@@ -104,7 +128,14 @@ class ExperienceBuffer:
         
         done_batch = self.dones[idx]
 
-        return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch
+        if self.prioritized:
+            return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch, idx, w
+        else:
+            return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch, idx
+
+    # TODO: Detach from gradient graph?
+    def update_priorities(self, idx, prio):
+        self.priorities[idx] = prio
 
     def can_sample(self, batch_size: int):
         return self.nb_samples >= batch_size
@@ -147,4 +178,4 @@ if __name__ == '__main__':
         memory.store_effect(idx, 0, 1.0, done=random.sample([True, False], 1)[0])
 
     batch = memory.sample(1)
-    print(batch[2], batch[-1])
+    print(batch[2], batch[-2])

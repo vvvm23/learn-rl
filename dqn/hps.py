@@ -19,6 +19,9 @@ HPS_BASIC = {
         'save_frequency':       100,
         'frame_stack':          4,
         'unroll_steps':         2,
+        'beta_start':           0.4,
+        'beta_end':             1.0,
+        'beta_frames':          100_000,
     }),
 
     'breakout': SimpleNamespace(**{
@@ -39,6 +42,9 @@ HPS_BASIC = {
         'save_frequency':       100,
         'frame_stack':          4,
         'unroll_steps':         4,
+        'beta_start':           0.4,
+        'beta_end':             1.0,
+        'beta_frames':          100_000,
     }),
 
     'invaders': SimpleNamespace(**{
@@ -59,23 +65,8 @@ HPS_BASIC = {
         'save_frequency':       100,
         'frame_stack':          4,
         'unroll_steps':         4,
+        'beta_start':           0.4,
+        'beta_end':             1.0,
+        'beta_frames':          100_000,
     }),
-
-    'cartpole': SimpleNamespace(**{
-        'env_name':             "CartPole-v1",
-        'stop_reward':          198.0,
-        'max_steps':            10_000,
-        'memory_capacity':      1_000,
-        'memory_initial':       100,
-        'target_sync':          10,
-        'train_frequency':      1,
-        'epsilon_start':        1.0,
-        'epsilon_end':          0.01,
-        'epsilon_frames':       1_000,
-        'learning_rate':        1e-2,
-        'gamma':                0.99,
-        'batch_size':           256,
-        'net_type':             'linear',
-        'save_frequency':       100,
-    })
 }
