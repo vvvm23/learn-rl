@@ -102,16 +102,6 @@ class ExperienceBuffer:
             total_reward += r
         return total_reward
             
-        # idx %= self.capacity
-        # start_idx = idx - self.unroll_steps
-        # total_reward = torch.tensor(0.0)
-        # for i in range(idx, start_idx, -1):
-            # total_reward *= self.gamma
-            # total_reward += self.rewards[i]
-            # if self.dones[i] or (i % self.capacity) >= self.nb_samples:
-                # break
-        # return total_reward
-
     def sample(self, batch_size: int):
         if self.prioritized:
             p = self.priorities[:self.nb_samples]

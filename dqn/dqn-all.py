@@ -100,7 +100,6 @@ if __name__ == '__main__':
         if args.render:
             env.render()
 
-        # obs = obs.squeeze(0) # TODO: Find a way to eliminate these squeeze calls, not very clean
         idx = memory.store_obs(obs)
         state = memory.get_stacked_obs(idx)
 

@@ -50,9 +50,9 @@ class DQN(nn.Module):
         )
 
         self.q_head = nn.Sequential(
-            NoisyLinear(get_conv_out(self.conv, in_shape), 512),
+            NoisyLinear(get_conv_out(self.conv, in_shape), 256),
             nn.ReLU(),
-            NoisyLinear(512, nb_actions),
+            NoisyLinear(256, nb_actions),
         )
 
     def forward(self, x):
