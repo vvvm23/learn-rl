@@ -58,6 +58,7 @@ if __name__ == '__main__':
         net=net, 
         nb_actions=nb_actions, 
         gamma=params.gamma,
+        unroll_steps=params.unroll_steps,
         device=device
     )
 

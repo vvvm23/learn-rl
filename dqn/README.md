@@ -5,7 +5,7 @@ separate scripts, so each improvement on the basic DQN can be tested individuall
 Once all the individual components have been implemented, they will be merged into the full, Rainbow
 architecture.
 
-This directory is heavily based off Chapter 8 in [Deep Reinforcement Learning Hands-On](https://github.com/PacktPublishing/Deep-Reinforcement-Learning-Hands-On-Second-Edition) by Maxim Lapan with significant divergence where it is appropriate (because what is the point in blindly copying?). In particular, I placed significant emphasis on engineering the code to easily support changes to experimental variables via config files.
+This directory is heavily based off Chapter 8 in [Deep Reinforcement Learning Hands-On](https://github.com/PacktPublishing/Deep-Reinforcement-Learning-Hands-On-Second-Edition) by Maxim Lapan with significant divergence where it is appropriate (because what is the point in blindly copying?). In particular, I placed significant emphasis on engineering the code to easily support changes to experimental variables via config files and also on increased performance in critical regions, such as in the replay buffers.
 
 ## TODO
 - [X] Basic DQN
