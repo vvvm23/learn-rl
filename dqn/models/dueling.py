@@ -19,15 +19,15 @@ class DQN(nn.Module):
         self.conv_size = get_conv_out(self.conv, in_shape)
 
         self.v_head = nn.Sequential(
-            nn.Linear(self.conv_size, 256),
+            nn.Linear(self.conv_size, 512),
             nn.ReLU(),
-            nn.Linear(256, 1),
+            nn.Linear(512, 1),
         )
 
         self.adv_head = nn.Sequential(
-            nn.Linear(self.conv_size, 256),
+            nn.Linear(self.conv_size, 512),
             nn.ReLU(),
-            nn.Linear(256, nb_actions)
+            nn.Linear(512, nb_actions)
         )
 
     def forward(self, x):
