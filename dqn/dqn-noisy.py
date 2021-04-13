@@ -29,7 +29,7 @@ def evaluate(agent, env, render=False):
                 env.render()
                 sleep(1 / 60.)
             state = torch.cat([state[1:], torch.from_numpy(obs).unsqueeze(0)], dim=0)
-            action = agent.act_epsilon_greedy(state, 0.02)
+            action = agent.act_greedy(state)
             obs, reward, done, _ = env.step(action)
             total_return += reward
         print(f"episode score: {total_return}")

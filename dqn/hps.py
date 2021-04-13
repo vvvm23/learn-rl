@@ -75,7 +75,7 @@ HPS_RAINBOW = {
     'pong': SimpleNamespace(**{
         'env_name':             "PongNoFrameskip-v4",
         'stop_reward':          18.0,
-        'max_steps':            2_000_000,
+        'max_steps':            10_000_000,
         'memory_capacity':      1_000_000,
         'memory_initial':       80_000,
         'target_sync':          32_000,
@@ -98,7 +98,7 @@ HPS_RAINBOW = {
     'breakout': SimpleNamespace(**{
         'env_name':             "BreakoutNoFrameskip-v4",
         'stop_reward':          18.0,
-        'max_steps':            2_000_000,
+        'max_steps':            10_000_000,
         'memory_capacity':      1_000_000,
         'memory_initial':       80_000,
         'target_sync':          32_000,
@@ -121,7 +121,7 @@ HPS_RAINBOW = {
     'invaders': SimpleNamespace(**{
         'env_name':             "SpaceInvadersNoFrameskip-v4",
         'stop_reward':          18.0,
-        'max_steps':            2_000_000,
+        'max_steps':            10_000_000,
         'memory_capacity':      1_000_000,
         'memory_initial':       80_000,
         'target_sync':          32_000,
