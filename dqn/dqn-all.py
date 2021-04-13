@@ -15,7 +15,7 @@ from models.rainbow import DQN
 from wrappers import make_env
 from helper import EpisilonAnnealer, VisdomLinePlotter
 
-from hps import HPS_BASIC as HPS
+from hps import HPS_RAINBOW as HPS
 
 @torch.no_grad()
 def evaluate(agent, env, render=False):
