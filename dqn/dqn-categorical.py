@@ -128,7 +128,7 @@ if __name__ == '__main__':
             *batch, _ = memory.sample(params.batch_size)
             loss = agent.calculate_loss(*batch, double=True)
             loss.mean().backward()
-            torch.nn.utils.clip_grad_norm_(agent.net.parameters(), 10.)
+            # torch.nn.utils.clip_grad_norm_(agent.net.parameters(), 10.)
             opt.step()
 
         pb.update(1)

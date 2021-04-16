@@ -137,8 +137,7 @@ class CategoricalDQNAgent:
 
         batch_size = obs_batch.shape[0]
 
-        # state_action_values = F.log_softmax(self.net(obs_batch), dim=-1).gather(1, action_batch.unsqueeze(-1)).squeeze(-1)
-        state_action_values = F.log_softmax(self.net(obs_batch), dim=-1)[:, action_batch]
+        state_action_values = F.log_softmax(self.net(obs_batch), dim=-1)[range(batch_size), action_batch]
         with torch.no_grad():
             if double:
                 pns = F.softmax(self.net(next_obs_batch), dim=-1)
@@ -146,7 +145,6 @@ class CategoricalDQNAgent:
                 next_state_actions = dns.sum(-1).argmax(-1)
 
                 pns = F.softmax(self.target_net(next_obs_batch), dim=-1)
-                # next_state_values = pns.gather(1, next_state_actions).squeeze(-1)
                 next_state_values = pns[range(batch_size), next_state_actions] # why is range different?
 
             else:
