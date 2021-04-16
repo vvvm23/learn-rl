@@ -9,6 +9,9 @@ class CategoricalDQN(nn.Module):
     def __init__(self, in_shape: Tuple[int, int, int], nb_actions: int, 
             nb_atoms: int = 51, vmin: float = -10., vmax: float = 10.):
         super().__init__()
+        self.nb_actions = nb_actions
+        self.nb_atoms = nb_atoms
+
         self.conv = nn.Sequential(
             nn.Conv2d(in_shape[0], 32, kernel_size=8, stride=4),
             nn.ReLU(),
@@ -24,11 +27,8 @@ class CategoricalDQN(nn.Module):
             nn.Linear(512, nb_actions * nb_atoms),
         )
 
-        dz = (vmax - vmin) / (nb_atoms - 1)
-        self.register_buffer('supports', torch.arange(vmin, vmax+dz, dz))
-
     def forward(self, x):
-        return self.q_head(self.conv(x).view(x.shape[0], -1))
+        return self.q_head(self.conv(x).view(x.shape[0], -1)).view(-1, self.nb_actions, self.nb_atoms)
 
 if __name__ == '__main__':
     net = DQN((4, 84, 84), 4)
