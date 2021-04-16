@@ -9,7 +9,7 @@ from pathlib import Path
 from collections import deque
 from time import sleep
 
-from agent import DQNAgent 
+from agent import CategoricalDQNAgent 
 from memory.memory import ExperienceBuffer
 from models.rainbow import DQN
 from wrappers import make_env
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         net = DQN((params.frame_stack, *obs_shape), nb_actions)
     elif params.net_type == 'linear':
         raise NotImplementedError
-    agent = DQNAgent(
+    agent = CategoricalDQNAgent(
         net=net, 
         nb_actions=nb_actions, 
         gamma=params.gamma,

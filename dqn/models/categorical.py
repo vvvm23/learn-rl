@@ -7,7 +7,7 @@ from typing import Tuple
 
 class CategoricalDQN(nn.Module):
     def __init__(self, in_shape: Tuple[int, int, int], nb_actions: int, 
-            nb_atoms: int = 51, vmin: float = -10., vmax: float = 10.):
+            nb_atoms: int = 51):
         super().__init__()
         self.nb_actions = nb_actions
         self.nb_atoms = nb_atoms
