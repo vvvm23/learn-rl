@@ -14,8 +14,8 @@ This directory is heavily based off Chapter 8 in [Deep Reinforcement Learning Ha
 - [X] N-step rewards
 - [X] Noisy DQN
 - [X] Prioritized Replay Buffers
-- [ ] Categorical DQN
-- [ ] Rainbow (Combining Everything)
+- [X] Categorical DQN
+- [X] Rainbow (Combining Everything)
 
 ### Citations
 
