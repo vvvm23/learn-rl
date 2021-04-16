@@ -137,23 +137,24 @@ class CategoricalDQNAgent:
 
         batch_size = obs_batch.shape[0]
 
-        state_action_values = F.log_softmax(self.net(obs_batch), dim=-1).gather(1, action_batch.unsqueeze(-1)).squeeze(-1)
+        # state_action_values = F.log_softmax(self.net(obs_batch), dim=-1).gather(1, action_batch.unsqueeze(-1)).squeeze(-1)
+        state_action_values = F.log_softmax(self.net(obs_batch), dim=-1)[:, action_batch]
         with torch.no_grad():
             if double:
-                pns = self.net(next_obs_batch)
+                pns = F.softmax(self.net(next_obs_batch), dim=-1)
                 dns = self.support.expand_as(pns) * pns
-                next_state_actions = dns.sum(-1).argmax(-1).unsqueeze(-1)
+                next_state_actions = dns.sum(-1).argmax(-1)
 
                 pns = F.softmax(self.target_net(next_obs_batch), dim=-1)
-                next_state_values = pns.gather(1, next_state_actions).squeeze(-1)
-                # next_state_actions = self.net(next_obs_batch).argmax(-1).unsqueeze(-1)
-                # next_state_values = self.target_net(next_obs_batch).gather(1, next_state_actions).squeeze(-1)
+                # next_state_values = pns.gather(1, next_state_actions).squeeze(-1)
+                next_state_values = pns[range(batch_size), next_state_actions] # why is range different?
+
             else:
-                next_state_values = F.softmax(self.target_net(next_obs_batch)).max(-1)[0]
+                next_state_values = F.softmax(self.target_net(next_obs_batch), dim=-1).max(1)[0]
             # next_state_values[done_batch] = 0.0
             # next_state_values = next_state_values.detach() # is this detach needed if we are in no_grad?
 
-            tz = (1.0 - done_batch) * (self.gamma ** self.unroll_steps) * self.support.unsqueeze(0) + reward_batch
+            tz = (1.0 - done_batch.float()).unsqueeze(-1) * (self.gamma ** self.unroll_steps) * self.support.unsqueeze(0) + reward_batch.unsqueeze(-1)
             tz = tz.clamp(min=self.vmin, max=self.vmax)
             b = (tz - self.vmin) / self.dz
             l, u = b.floor().to(torch.int64), b.ceil().to(torch.int64)
@@ -162,12 +163,13 @@ class CategoricalDQNAgent:
             u[(l < (self.nb_atoms - 1)) * (l == u)] += 1
 
             m = obs_batch.new_zeros(batch_size, self.nb_atoms)
-            offset = torch.linspace(0, ((batch_size - 1) * self.nb_atoms), batch_size).unsqueeze(1).expand(batch_size, self.nb_atoms).to(action_batch)
+            offset = torch.linspace(0, (batch_size - 1) * self.nb_atoms, batch_size).unsqueeze(1).expand(batch_size, self.nb_atoms).to(action_batch)
+
             m.view(-1).index_add_(0, (l+offset).view(-1), (next_state_values * (u.float() - b)).view(-1))
             m.view(-1).index_add_(0, (u+offset).view(-1), (next_state_values * (b - l.float())).view(-1))
 
         # loss = (state_action_values - expected_state_action_values).pow(2)
-        loss = -torch.sum(m * state_action_values)
+        loss = -torch.sum(m * state_action_values, dim=1)
         return loss
 
     def save(self, path):
@@ -176,24 +178,3 @@ class CategoricalDQNAgent:
     def load(self, path):
         self.net.load_state_dict(torch.load(path))
         self.sync_target()
-
-if __name__ == '__main__':
-    nb_actions = 4
-    net = nn.Linear(8, nb_actions)
-    agent = DQNAgent(net, nb_actions, gamma=0.99)
-    opt = torch.optim.Adam(net.parameters())
-
-    agent.sync_target()
-
-    opt.zero_grad()
-    loss = agent.calculate_loss(
-        torch.randn(8, 8),
-        torch.randint(0, nb_actions, (8,)),
-        torch.randn(8),
-        torch.randn(8,8),
-        torch.randint(0, 2, (8,)),
-    )
-    loss.backward()
-    opt.step()
-    print(loss.item())
-
