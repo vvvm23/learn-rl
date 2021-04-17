@@ -154,9 +154,10 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-def make_env(env_name):
+def make_env(env_name, episodic=True):
     env = gym.make(env_name)
-    env = EpisodicLifeEnv(env)
+    if episodic:
+        env = EpisodicLifeEnv(env)
     env = MaxAndSkipEnv(env)
     env = FireResetEnv(env)
     env = ProcessFrame84(env)

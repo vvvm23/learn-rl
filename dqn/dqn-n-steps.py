@@ -64,6 +64,7 @@ if __name__ == '__main__':
 
     if args.evaluate:
         agent.net.load_state_dict(torch.load(args.evaluate))
+        env = make_env(params.env_name, episodic=False)
         evaluate(agent, env, render=args.render)
         exit()
 
